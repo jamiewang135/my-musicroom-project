@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>音樂室互動</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
+
+    #background {
+       width: 1000px;
+       height: 600px;
+       margin: 0 auto;
+       background-image: url("assets/background.png");
+       background-size: contain;
+       background-position: center;
+       background-repeat: no-repeat;
+       border: 1px solid #ccc;
+    }
+
+    .draggable {
+      position: absolute;
+      cursor: move;
+      user-select: none;
+    }
+
+    .tambourine { width: 80px; }
+    .cockroach { width: 50px; }
+    .man_bento { width: 120px; }
+    .ant { width: 40px; }
+    .bento { width: 70px; }
+
+    .button-bar {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.85);
+      padding: 8px;
+      border-radius: 6px;
+      z-index: 10;
+    }
+
+    .button-bar button {
+      margin: 4px;
+      font-size: 14px;
+    }
+
+    .hint {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 5px;
+      font-size: 13px;
+    }
+
+    .selected {
+      outline: 3px solid red;
+    }
+  </style>
+</head>
+<body>
+  <!-- 控制按鈕 -->
+  <div class="button-bar">
+    <button onclick="addItem('tambourine')">新增鈴鼓</button>
+    <button onclick="addItem('cockroach')">新增蟑螂</button>
+    <button onclick="addItem('man_bento')">新增吃便當羽球男</button>
+    <button onclick="addItem('ant')">新增螞蟻</button>
+    <button onclick="addItem('bento')">新增便當</button>
+  </div>
+
+  <!-- 提示 -->
+  <div class="hint">雙擊圖片可刪除，點選圖片後按「+ / - 鍵」可縮放</div>
+
+  <!-- 背景 -->
+  <div id="background"></div>
+
+  <script>
+    const background = document.getElementById("background");
+    let selectedImg = null;
+
+    function addItem(type) {
+      const img = document.createElement("img");
+      img.classList.add("draggable", type);
+
+      // 設定圖片路徑
+      img.src = "assets/" + type + ".png";
+
+      // 隨機初始位置
+      img.style.left = Math.random() * 500 + "px";
+      img.style.top = Math.random() * 300 + "px";
+
+      // 拖曳
+      enableDrag(img);
+
+      // 點一下選取
+      img.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (selectedImg) selectedImg.classList.remove("selected");
+        selectedImg = img;
+        img.classList.add("selected");
+      });
+
+      // 雙擊刪除
+      img.addEventListener("dblclick", () => {
+        img.remove();
+        if (selectedImg === img) selectedImg = null;
+      });
+
+      background.appendChild(img);
+    }
+
+    // 點空白取消選取
+    background.addEventListener("click", () => {
+      if (selectedImg) selectedImg.classList.remove("selected");
+      selectedImg = null;
+    });
+
+    // + / - 鍵縮放
+    document.addEventListener("keydown", (e) => {
+      if (!selectedImg) return;
+      const step = 10;
+      let w = selectedImg.offsetWidth;
+
+      if (e.key === "+") {
+        selectedImg.style.width = (w + step) + "px";
+      } else if (e.key === "-") {
+        selectedImg.style.width = Math.max(20, w - step) + "px";
+      }
+    });
+
+    // 拖曳功能
+    function enableDrag(el) {
+      el.addEventListener("mousedown", function (e) {
+        e.preventDefault();
+        const shiftX = e.clientX - el.getBoundingClientRect().left;
+        const shiftY = e.clientY - el.getBoundingClientRect().top;
+
+        function moveAt(pageX, pageY) {
+          el.style.left = pageX - shiftX + "px";
+          el.style.top = pageY - shiftY + "px";
+        }
+
+        function onMouseMove(e) {
+          moveAt(e.pageX, e.pageY);
+        }
+
+        document.addEventListener("mousemove", onMouseMove);
+
+        el.addEventListener("mouseup", () => {
+          document.removeEventListener("mousemove", onMouseMove);
+        }, { once: true });
+      });
+
+      el.ondragstart = () => false;
+    }
+  </script>
+</body>
+</html>
